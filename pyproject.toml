@@ -12,3 +12,16 @@ dependencies = [
     "tensorflow-metal>=1.2.0",
     "numpy<2.0",
 ]
+
+[tool.ruff]
+include = ["pyproject.toml", "**/*.py"]
+line-length = 80
+
+[tool.ruff.lint]
+select = ["D", "N", "I", "E501", "E", "F"]
+ignore = ["ANN", "D410", "D413", "D100", "D211", "D213", "D203"]
+exclude = [
+    "**/__init__.py",
+    "notebooks/",  # Ignore build artifacts
+    "docs/",   # Ignore documentation files
+]
