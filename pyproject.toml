@@ -11,11 +11,15 @@ dependencies = [
     "tensorflow>=2.14.0",
     "tensorflow-metal>=1.2.0",
     "numpy<2.0",
+    "matplotlib>=3.10.0",
+    "scikit-learn>=1.6.1",
+    "plotly>=6.0.0",
+    "nbformat>=5.10.4",
 ]
 
 [tool.ruff]
 include = ["pyproject.toml", "**/*.py"]
-line-length = 80
+line-length = 100
 
 [tool.ruff.lint]
 select = ["D", "N", "I", "E501", "E", "F"]
