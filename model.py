@@ -88,7 +88,7 @@ class Word2Vec(Model):  # noqa: D101
         similarity_score = self.similarity_metric([center_embedding, context_embedding])
         return similarity_score
 
-    def get_word_embedding(self, word: str) -> np.nparray:  
+    def get_word_embedding(self, word: str) -> np.ndarray:  
         """Get the embedding of a single word."""
         if word not in self.vocabulary:
             raise ValueError(f"{word} not in vocabulary!")
