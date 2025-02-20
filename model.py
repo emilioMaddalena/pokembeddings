@@ -158,3 +158,29 @@ class Word2Vec(Model):  # noqa: D101
             )
             fig.update_traces(marker=dict(size=5, opacity=0.8))
             fig.show()
+
+    # The following two methods are needed to ensure Keraas will
+    # correctly save and load not only the base model, but also
+    # all custom attributes
+    def get_config(self):  # noqa: D102
+        config = super(Word2Vec, self).get_config()
+        config.update({
+            "dataset": self.dataset,
+            "embedding_dim": self.embedding_dim,
+            "vocabulary": list(self.vocabulary),
+            "vocabulary_size": self.vocabulary_size,
+            "word2idx": self.word2idx,
+            "idx2word": self.idx2word,
+        })
+        return config
+
+    @classmethod
+    def from_config(cls, config):  # noqa: D102
+        dataset = config.pop("dataset")
+        embedding_dim = config.pop("embedding_dim")
+        model = cls(dataset, embedding_dim)
+        model.vocabulary = set(config.pop("vocabulary"))
+        model.vocabulary_size = config.pop("vocabulary_size")
+        model.word2idx = config.pop("word2idx")
+        model.idx2word = config.pop("idx2word")
+        return model
