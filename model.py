@@ -1,16 +1,19 @@
-from typing import List
+from typing import List, Optional
 
 import numpy as np
+import pandas as pd
+import plotly.express as px
 import tensorflow as tf
+from sklearn.manifold import TSNE
 from tensorflow.keras.layers import Dot, Embedding
 from tensorflow.keras.models import Model
 
 
 class Word2Vec(Model):  # noqa: D101
     """A Word2Vec model implementation using Keras.
-    
+
     To use it, follow the steps:
-    - Instantiate it with a list of tokenized sentences. 
+    - Instantiate it with a list of tokenized sentences.
     - Call self.prepare_dataset to create the trainig batches.
     - Call self.compile() to specify the optimizer and loss.
     - Train the model using self.fit().
@@ -59,7 +62,9 @@ class Word2Vec(Model):  # noqa: D101
                             (self.word2idx[center_word], self.word2idx[sentence[context_idx]])
                         )
 
-        print("Sample word pairs:", [(self.idx2word[c], self.idx2word[ctx]) for c, ctx in pairs[:5]])
+        print(
+            "Sample word pairs:", [(self.idx2word[c], self.idx2word[ctx]) for c, ctx in pairs[:5]]
+        )
 
         # Extract center and context words as separate lists
         center_words, context_words = zip(*pairs)
@@ -69,7 +74,7 @@ class Word2Vec(Model):  # noqa: D101
 
         # Create a TensorFlow dataset
         train_dataset = tf.data.Dataset.from_tensor_slices(((center_words, context_words), labels))
-        train_dataset = train_dataset.map(lambda pair, label: ((tf.stack(pair), label), label)) 
+        train_dataset = train_dataset.map(lambda pair, label: ((tf.stack(pair), label), label))
         train_dataset = train_dataset.shuffle(10000).batch(128)
 
         for element in train_dataset.take(1):
@@ -88,7 +93,7 @@ class Word2Vec(Model):  # noqa: D101
         similarity_score = self.similarity_metric([center_embedding, context_embedding])
         return similarity_score
 
-    def get_word_embedding(self, word: str) -> np.ndarray:  
+    def get_word_embedding(self, word: str) -> np.ndarray:
         """Get the embedding of a single word."""
         if word not in self.vocabulary:
             raise ValueError(f"{word} not in vocabulary!")
@@ -103,3 +108,53 @@ class Word2Vec(Model):  # noqa: D101
         embedding_a = tf.reshape(self.get_word_embedding(word_a), (1, self.embedding_dim))
         embedding_b = tf.reshape(self.get_word_embedding(word_b), (1, self.embedding_dim))
         return self.similarity_metric([embedding_a, embedding_b]).numpy()[0, 0]
+
+    def _project_embeddings(self, embeddings: np.ndarray, dim: int, rnd_seed: int) -> np.ndarray:
+        """Project embeddings onto a lower-dimensional space."""
+        tsne = TSNE(n_components=dim, random_state=rnd_seed)
+        return tsne.fit_transform(embeddings)
+
+    def visualize_embeddings(
+        self, dim: int = 2, rnd_seed: int = 123, words: Optional[List[str]] = None
+    ):
+        """Visualize the embeddings in a 2D or 3D space."""
+        if dim not in (2, 3):
+            raise ValueError("dim must be 2 or 3.")
+        if words:
+            if set(words) - self.vocabulary:
+                raise ValueError("Some words are not in the vocabulary.")
+
+        # Get embeddings and project them
+        if words:
+            # process all provided words
+            embeddings = np.array([self.get_word_embedding(word) for word in words])
+            projected_embeddings = self._project_embeddings(embeddings, dim, rnd_seed)
+            labels = words
+        else:
+            # then retrieve all embeddings in the vocabulary
+            embeddings = self.get_layer("word_embedding").get_weights()[0]
+            projected_embeddings = self._project_embeddings(embeddings, dim, rnd_seed)
+            labels = [self.idx2word[idx] for idx in range(self.vocabulary_size)]
+
+        # Plot
+        if dim == 2:
+            df = pd.DataFrame(projected_embeddings, columns=["x", "y"])
+            df["label"] = labels
+            fig = px.scatter(
+                df, x="x", y="y", hover_name="label", title="projected embeddings"
+            )
+            fig.update_traces(marker=dict(size=8, opacity=0.8))
+            fig.show()
+        elif dim == 3:
+            df = pd.DataFrame(projected_embeddings, columns=["x", "y", "z"])
+            df["label"] = labels
+            fig = px.scatter_3d(
+                df,
+                x="x",
+                y="y",
+                z="z",
+                hover_name="label",
+                title="projected embeddings",
+            )
+            fig.update_traces(marker=dict(size=5, opacity=0.8))
+            fig.show()
