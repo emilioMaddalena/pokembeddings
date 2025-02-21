@@ -47,7 +47,6 @@ POKEMONS_BY_TYPE = {
         "ivysaur",
         "venusaur",
         "oddish",
-        "gloom",
         "vileplume",
         "paras",
         "parasect",
