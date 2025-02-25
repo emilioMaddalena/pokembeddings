@@ -25,12 +25,11 @@ for correct_type, pokemons in POKEMONS_BY_TYPE.items():
     ]
     test_cases.extend(new_testcases)
 
-#@pytest.mark.parametrize("test_case", test_cases)
-@pytest.mark.parametrize("test_case", [WordGroup("charmander", "fire", "grass")])
+@pytest.mark.parametrize("test_case", test_cases)
 def test_pokembedding(model: Word2Vec, test_case: WordGroup):
     """Asser that the close word is indeed closer."""
     close_similarity = model.compute_similarity(test_case.base_word, test_case.close_word)
     far_similarity = model.compute_similarity(test_case.base_word, test_case.far_word)
     assert (
         close_similarity < far_similarity
-    ), f"{test_case.base_word}, {test_case.close_word}, {test_case.far_word} failed..."
+    )#, f"{test_case.base_word}, {test_case.close_word}, {test_case.far_word} failed..."
