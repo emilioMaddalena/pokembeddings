@@ -21,7 +21,10 @@ class Word2Vec(Model):  # noqa: D101
     """
 
     def __init__(self, dataset: List[List[str]], embedding_dim: int):
-        """_summary_.
+        """Initialize the base attributes.
+
+        Save the dataset, extract vocabulary and index the tokens.
+        Define the base layers for the model.
 
         Args:
             dataset: A set of tokenized sentences on which the model will be trained.
@@ -50,7 +53,10 @@ class Word2Vec(Model):  # noqa: D101
         self.similarity_metric = Dot(axes=1, normalize=False)
 
     def prepare_dataset(self, window_size: int) -> tf.Tensor:
-        """Generate (center, context) word pairs. The dataset is then shuffled and batched."""
+        """Transform the dataset so that it can be used for training.
+
+        Generate (center, context) word pairs. The dataset is then shuffled and batched.
+        """
         pairs = []
         for sentence in self.dataset:
             for idx, center_word in enumerate(sentence):
@@ -140,9 +146,7 @@ class Word2Vec(Model):  # noqa: D101
         if dim == 2:
             df = pd.DataFrame(projected_embeddings, columns=["x", "y"])
             df["label"] = labels
-            fig = px.scatter(
-                df, x="x", y="y", hover_name="label", title="projected embeddings"
-            )
+            fig = px.scatter(df, x="x", y="y", hover_name="label", title="projected embeddings")
             fig.update_traces(marker=dict(size=8, opacity=0.8))
             fig.show()
         elif dim == 3:
@@ -159,19 +163,21 @@ class Word2Vec(Model):  # noqa: D101
             fig.update_traces(marker=dict(size=5, opacity=0.8))
             fig.show()
 
-    # The following two methods are needed to ensure Keraas will
+    # The following two methods are needed to ensure Keras will
     # correctly save and load not only the base model, but also
     # all custom attributes
     def get_config(self):  # noqa: D102
         config = super(Word2Vec, self).get_config()
-        config.update({
-            "dataset": self.dataset,
-            "embedding_dim": self.embedding_dim,
-            "vocabulary": list(self.vocabulary),
-            "vocabulary_size": self.vocabulary_size,
-            "word2idx": self.word2idx,
-            "idx2word": self.idx2word,
-        })
+        config.update(
+            {
+                "dataset": self.dataset,
+                "embedding_dim": self.embedding_dim,
+                "vocabulary": list(self.vocabulary),
+                "vocabulary_size": self.vocabulary_size,
+                "word2idx": self.word2idx,
+                "idx2word": self.idx2word,
+            }
+        )
         return config
 
     @classmethod
