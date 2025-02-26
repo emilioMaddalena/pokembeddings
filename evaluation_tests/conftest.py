@@ -21,9 +21,7 @@ def model(model_path):
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
-    # Clear the default summary
-    terminalreporter.stats = {}
-
+    
     # Collect test results
     total = terminalreporter._numcollected
     passed = len(terminalreporter.stats.get("passed", []))
