@@ -50,7 +50,7 @@ class Word2Vec(Model):  # noqa: D101
         # Setup the main components
         self.embedding_dim = embedding_dim
         self.embedding = Embedding(self.vocabulary_size, self.embedding_dim, name="word_embedding")
-        self.similarity_metric = Dot(axes=1, normalize=False)
+        self.similarity_metric = Dot(axes=1, normalize=True) # cosine similarity
 
     def prepare_dataset(self, window_size: int) -> tf.Tensor:
         """Transform the dataset so that it can be used for training.
