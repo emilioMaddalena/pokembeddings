@@ -34,17 +34,15 @@ class Word2Vec(Model):  # noqa: D101
 
         # Extract vocabulary from the dataset
         self.dataset = dataset
-        vocabulary = set(word for sentence in dataset for word in sentence)
-        self.vocabulary = vocabulary
-        self.vocabulary_size = len(vocabulary)
+        self.vocabulary = set(word for sentence in dataset for word in sentence)
 
         # Create auxiliary mappings
-        word2idx = {word: idx for idx, word in enumerate(vocabulary)}
+        word2idx = {word: idx for idx, word in enumerate(self.vocabulary)}
         idx2word = {idx: word for word, idx in word2idx.items()}
         self.word2idx = word2idx
         self.idx2word = idx2word
 
-        print("Word2Vec vocabulary size:", len(vocabulary))
+        print("Word2Vec vocabulary size:", len(self.vocabulary))
         print("Word2Vec vocabulary words and indexes:", word2idx)
 
         # Setup the main components
@@ -52,6 +50,11 @@ class Word2Vec(Model):  # noqa: D101
         self.embedding = Embedding(self.vocabulary_size, self.embedding_dim, name="word_embedding")
         self.similarity_metric = Dot(axes=1, normalize=True) # cosine similarity
 
+    @property
+    def vocabulary_size(self) -> int:
+        """Return the size of the vocabulary."""
+        return len(self.vocabulary)
+    
     def prepare_dataset(self, window_size: int) -> tf.Tensor:
         """Transform the dataset so that it can be used for training.
 
