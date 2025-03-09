@@ -110,24 +110,20 @@ class Word2Vec(Model):  # noqa: D101
         labels = np.array(all_labels, dtype=np.float32)
 
         # Create a TensorFlow dataset
-        train_dataset = tf.data.Dataset.from_tensor_slices(((all_centers, all_contexts), labels))
-        train_dataset = train_dataset.map(lambda pair, label: ((tf.stack(pair), label), label))
+        train_dataset = tf.data.Dataset.from_tensor_slices(
+            ({"center": all_centers, "context": all_contexts}, labels)
+        )
         train_dataset = train_dataset.shuffle(10000).batch(128)
-
-        # Print a sample batch
-        for element in train_dataset.take(1):
-            batch, label = element
-            print("Batch shape:", batch[0].shape)
-            print("Batch contents:", batch[0].numpy())
-            print("Labels:", label.numpy())
 
         return train_dataset
 
     def call(self, inputs):  # noqa: D102
-        pair, label = inputs
-        pair = tf.reshape(pair, (-1, 2))
-        center_embedding = self.embedding(pair[:, 0])
-        context_embedding = self.embedding(pair[:, 1])
+        center_indices = inputs["center"]
+        context_indices = inputs["context"]
+        # Get embeddings
+        center_embedding = self.embedding(center_indices)
+        context_embedding = self.embedding(context_indices)
+        # Calculate similarity
         similarity_score = self.similarity_metric([center_embedding, context_embedding])
         return similarity_score
 
