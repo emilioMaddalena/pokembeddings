@@ -1,3 +1,4 @@
+from collections import defaultdict
 from typing import List, Optional
 
 import numpy as np
@@ -37,13 +38,12 @@ class Word2Vec(Model):  # noqa: D101
         self.vocabulary = set(word for sentence in dataset for word in sentence)
 
         # Create auxiliary mappings
-        word2idx = {word: idx for idx, word in enumerate(self.vocabulary)}
-        idx2word = {idx: word for word, idx in word2idx.items()}
-        self.word2idx = word2idx
-        self.idx2word = idx2word
+        self.vocabulary_indexes = list(range(self.vocabulary_size))
+        self.word2idx = {word: idx for idx, word in enumerate(self.vocabulary)}
+        self.idx2word = {idx: word for word, idx in self.word2idx.items()}
 
         print("Word2Vec vocabulary size:", len(self.vocabulary))
-        print("Word2Vec vocabulary words and indexes:", word2idx)
+        print("Word2Vec vocabulary words and indexes:", self.word2idx)
 
         # Setup the main components
         self.embedding_dim = embedding_dim
@@ -55,37 +55,66 @@ class Word2Vec(Model):  # noqa: D101
         """Return the size of the vocabulary."""
         return len(self.vocabulary)
     
-    def prepare_dataset(self, window_size: int) -> tf.Tensor:
+    def prepare_dataset(self, window_size: int, num_negative_samples: int = 5) -> tf.Tensor:
         """Transform the dataset so that it can be used for training.
 
         Generate (center, context) word pairs. The dataset is then shuffled and batched.
+        Both positive and negative samples are used.
         """
-        pairs = []
+        positive_pairs = []
         for sentence in self.dataset:
             for idx, center_word in enumerate(sentence):
                 context_start = max(0, idx - window_size)
                 context_end = min(len(sentence), idx + window_size + 1)
                 for context_idx in range(context_start, context_end):
                     if context_idx != idx:  # Avoid self-pairing
-                        pairs.append(
+                        positive_pairs.append(
                             (self.word2idx[center_word], self.word2idx[sentence[context_idx]])
                         )
 
         print(
-            "Sample word pairs:", [(self.idx2word[c], self.idx2word[ctx]) for c, ctx in pairs[:5]]
+            "Sample word pairs:", [(self.idx2word[c], self.idx2word[ctx]) for c, ctx in positive_pairs[:5]]
         )
+        
+        # Create dictionary with lists instead of sets initially
+        center_to_context = defaultdict(set)
+        for center_idx, context_idx in positive_pairs:
+            center_to_context[center_idx].add(context_idx) 
 
-        # Extract center and context words as separate lists
-        center_words, context_words = zip(*pairs)
-        center_words = np.array(center_words, dtype=np.int32)
-        context_words = np.array(context_words, dtype=np.int32)
-        labels = np.ones(len(center_words), dtype=np.float32)  # Positive examples only
+        all_centers = []
+        all_contexts = []  
+        all_labels = []
+
+        # Generate positive samples (label=1.0)
+        for center_idx, context_idx in positive_pairs:
+            all_centers.append(center_idx)
+            all_contexts.append(context_idx)
+            all_labels.append(1.0)
+            
+        # Generate negative samples (label=0.0)
+        for center_idx in center_to_context:
+            valid_negative_idxs = list(
+                set(self.vocabulary_indexes) - set(center_to_context[center_idx])
+            )
+            if not valid_negative_idxs:
+                continue
+            for _ in range(num_negative_samples):
+                negative_idx = np.random.choice(valid_negative_idxs)
+                all_centers.append(center_idx)
+                all_contexts.append(negative_idx)
+                all_labels.append(0.0)
+        
+        # Convert to arrays
+        all_centers = np.array(all_centers, dtype=np.int32)
+        all_contexts = np.array(all_contexts, dtype=np.int32)
+        labels = np.array(all_labels, dtype=np.float32)
 
         # Create a TensorFlow dataset
-        train_dataset = tf.data.Dataset.from_tensor_slices(((center_words, context_words), labels))
+        train_dataset = tf.data.Dataset.from_tensor_slices(((all_centers, all_contexts), labels))
         train_dataset = train_dataset.map(lambda pair, label: ((tf.stack(pair), label), label))
         train_dataset = train_dataset.shuffle(10000).batch(128)
 
+        # Print a sample batch
         for element in train_dataset.take(1):
             batch, label = element
             print("Batch shape:", batch[0].shape)
