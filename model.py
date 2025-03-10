@@ -42,19 +42,16 @@ class Word2Vec(Model):  # noqa: D101
         self.word2idx = {word: idx for idx, word in enumerate(self.vocabulary)}
         self.idx2word = {idx: word for word, idx in self.word2idx.items()}
 
-        print("Word2Vec vocabulary size:", len(self.vocabulary))
-        print("Word2Vec vocabulary words and indexes:", self.word2idx)
-
         # Setup the main components
         self.embedding_dim = embedding_dim
         self.embedding = Embedding(self.vocabulary_size, self.embedding_dim, name="word_embedding")
-        self.similarity_metric = Dot(axes=1, normalize=True) # cosine similarity
+        self.similarity_metric = Dot(axes=1, normalize=True)  # cosine similarity
 
     @property
     def vocabulary_size(self) -> int:
         """Return the size of the vocabulary."""
         return len(self.vocabulary)
-    
+
     def prepare_dataset(self, window_size: int, num_negative_samples: int = 5) -> tf.Tensor:
         """Transform the dataset so that it can be used for training.
 
@@ -73,16 +70,17 @@ class Word2Vec(Model):  # noqa: D101
                         )
 
         print(
-            "Sample word pairs:", [(self.idx2word[c], self.idx2word[ctx]) for c, ctx in positive_pairs[:5]]
+            "Sample word pairs:",
+            [(self.idx2word[c], self.idx2word[ctx]) for c, ctx in positive_pairs[:5]],
         )
-        
+
         # Create dictionary with lists instead of sets initially
         center_to_context = defaultdict(set)
         for center_idx, context_idx in positive_pairs:
-            center_to_context[center_idx].add(context_idx) 
+            center_to_context[center_idx].add(context_idx)
 
         all_centers = []
-        all_contexts = []  
+        all_contexts = []
         all_labels = []
 
         # Generate positive samples (label=1.0)
@@ -90,7 +88,7 @@ class Word2Vec(Model):  # noqa: D101
             all_centers.append(center_idx)
             all_contexts.append(context_idx)
             all_labels.append(1.0)
-            
+
         # Generate negative samples (label=0.0)
         for center_idx in center_to_context:
             valid_negative_idxs = list(
@@ -103,7 +101,7 @@ class Word2Vec(Model):  # noqa: D101
                 all_centers.append(center_idx)
                 all_contexts.append(negative_idx)
                 all_labels.append(0.0)
-        
+
         # Convert to arrays
         all_centers = np.array(all_centers, dtype=np.int32)
         all_contexts = np.array(all_contexts, dtype=np.int32)
@@ -200,21 +198,26 @@ class Word2Vec(Model):  # noqa: D101
             {
                 "dataset": self.dataset,
                 "embedding_dim": self.embedding_dim,
-                "vocabulary": list(self.vocabulary),
-                "vocabulary_size": self.vocabulary_size,
+                "vocabulary": list(self.vocabulary),  # Convert set to list for serialization
                 "word2idx": self.word2idx,
-                "idx2word": self.idx2word,
+                "idx2word": {
+                    str(k): v for k, v in self.idx2word.items()
+                },  # Convert int keys to str
             }
         )
         return config
 
     @classmethod
     def from_config(cls, config):  # noqa: D102
+        # Rebuild the model with the same parameters
         dataset = config.pop("dataset")
         embedding_dim = config.pop("embedding_dim")
-        model = cls(dataset, embedding_dim)
-        model.vocabulary = set(config.pop("vocabulary"))
-        model.vocabulary_size = config.pop("vocabulary_size")
-        model.word2idx = config.pop("word2idx")
-        model.idx2word = config.pop("idx2word")
-        return model
+        instance = cls(dataset, embedding_dim)
+        # Restore custom attributes if they exist in the config
+        if "vocabulary" in config:
+            instance.vocabulary = set(config.pop("vocabulary"))  # Convert back to set
+        if "word2idx" in config:
+            instance.word2idx = config.pop("word2idx")
+        if "idx2word" in config:
+            instance.idx2word = {int(k): v for k, v in config.pop("idx2word").items()}
+        return instance
