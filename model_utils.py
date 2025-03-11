@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict, Union
+from typing import List, Optional, Dict, Union, Mapping
 
 import numpy as np
 import pandas as pd
@@ -7,6 +7,14 @@ from sklearn.manifold import TSNE
 
 from model import Word2Vec
 
+# Define default Pokemon type colors
+DEFAULT_TYPE_COLORS = {
+    "fire": "red",
+    "water": "blue",
+    "electric": "yellow",
+    "grass": "green", 
+    "psychic": "purple"
+}
 
 def _project_embeddings(embeddings: np.ndarray, dim: int, rnd_seed: int) -> np.ndarray:
     """Project embeddings onto a lower-dimensional space."""
@@ -19,7 +27,8 @@ def visualize_embeddings(
     dim: int = 2, 
     rnd_seed: int = 123, 
     words: Optional[Union[List[str], Dict[str, str]]] = None,
-    title: str = "projected embeddings"
+    title: str = "projected embeddings",
+    color_map: Optional[Dict[str, str]] = DEFAULT_TYPE_COLORS
 ):
     """Visualize the embeddings in a 2D or 3D space.
     
@@ -33,6 +42,9 @@ def visualize_embeddings(
               Each class will receive a distinct color in the plot.
             - If None: All words in the vocabulary are visualized.
         title (str, optional): Title for the plot. Defaults to "projected embeddings".
+        color_map (Optional[Dict[str, str]], optional): Dictionary mapping class names to specific colors.
+            Default colors are used for Pokemon types: fire=red, water=blue, electric=yellow, 
+            grass=green, psychic=purple.
         
     Returns:
         pd.DataFrame: DataFrame containing the projection data.
@@ -78,7 +90,8 @@ def visualize_embeddings(
             y="y", 
             hover_name="label", 
             color="class", 
-            title=title
+            title=title,
+            color_discrete_map=color_map  # Use our color map
         )
         fig.update_traces(marker=dict(size=8, opacity=0.8))
         fig.show()
@@ -92,6 +105,8 @@ def visualize_embeddings(
             hover_name="label",
             color="class",
             title=title,
+            color_discrete_map=color_map  # Use our color map
         )
         fig.update_traces(marker=dict(size=5, opacity=0.8))
         fig.show()
+        
