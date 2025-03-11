@@ -141,54 +141,6 @@ class Word2Vec(Model):  # noqa: D101
         embedding_b = tf.reshape(self.get_word_embedding(word_b), (1, self.embedding_dim))
         return self.similarity_metric([embedding_a, embedding_b]).numpy()[0, 0]
 
-    def _project_embeddings(self, embeddings: np.ndarray, dim: int, rnd_seed: int) -> np.ndarray:
-        """Project embeddings onto a lower-dimensional space."""
-        tsne = TSNE(n_components=dim, random_state=rnd_seed)
-        return tsne.fit_transform(embeddings)
-
-    def visualize_embeddings(
-        self, dim: int = 2, rnd_seed: int = 123, words: Optional[List[str]] = None
-    ):
-        """Visualize the embeddings in a 2D or 3D space."""
-        if dim not in (2, 3):
-            raise ValueError("dim must be 2 or 3.")
-        if words:
-            if set(words) - self.vocabulary:
-                raise ValueError("Some words are not in the vocabulary.")
-
-        # Get embeddings and project them
-        if words:
-            # process all provided words
-            embeddings = np.array([self.get_word_embedding(word) for word in words])
-            projected_embeddings = self._project_embeddings(embeddings, dim, rnd_seed)
-            labels = words
-        else:
-            # then retrieve all embeddings in the vocabulary
-            embeddings = self.get_layer("word_embedding").get_weights()[0]
-            projected_embeddings = self._project_embeddings(embeddings, dim, rnd_seed)
-            labels = [self.idx2word[idx] for idx in range(self.vocabulary_size)]
-
-        # Plot
-        if dim == 2:
-            df = pd.DataFrame(projected_embeddings, columns=["x", "y"])
-            df["label"] = labels
-            fig = px.scatter(df, x="x", y="y", hover_name="label", title="projected embeddings")
-            fig.update_traces(marker=dict(size=8, opacity=0.8))
-            fig.show()
-        elif dim == 3:
-            df = pd.DataFrame(projected_embeddings, columns=["x", "y", "z"])
-            df["label"] = labels
-            fig = px.scatter_3d(
-                df,
-                x="x",
-                y="y",
-                z="z",
-                hover_name="label",
-                title="projected embeddings",
-            )
-            fig.update_traces(marker=dict(size=5, opacity=0.8))
-            fig.show()
-
     # The following two methods are needed to ensure Keras will
     # correctly save and load not only the base model, but also
     # all custom attributes
