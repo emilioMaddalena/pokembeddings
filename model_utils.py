@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Dict, Union
 
 import numpy as np
 import pandas as pd
@@ -15,7 +15,11 @@ def _project_embeddings(embeddings: np.ndarray, dim: int, rnd_seed: int) -> np.n
 
 
 def visualize_embeddings(
-    model: Word2Vec, dim: int = 2, rnd_seed: int = 123, words: Optional[List[str]] = None
+    model: Word2Vec, 
+    dim: int = 2, 
+    rnd_seed: int = 123, 
+    words: Optional[Union[List[str], Dict[str, str]]] = None,
+    title: str = "projected embeddings"
 ):
     """Visualize the embeddings in a 2D or 3D space.
     
@@ -23,45 +27,71 @@ def visualize_embeddings(
         model (Word2Vec): The Word2Vec model to visualize.
         dim (int, optional): Dimension of the projection. Defaults to 2.
         rnd_seed (int, optional): Random seed for the projection. Defaults to 123.
-        words (Optional[List[str]], optional): List of words to visualize. If None,
-            all words in the vocabulary are visualized. Defaults to None.
+        words (Optional[Union[List[str], Dict[str, str]]], optional): 
+            - If List[str]: List of words to visualize (all assigned same class).
+            - If Dict[str, str]: Dictionary where keys are words and values are classes/categories.
+              Each class will receive a distinct color in the plot.
+            - If None: All words in the vocabulary are visualized.
+        title (str, optional): Title for the plot. Defaults to "projected embeddings".
+        
+    Returns:
+        pd.DataFrame: DataFrame containing the projection data.
     """
     if dim not in (2, 3):
         raise ValueError("dim must be 2 or 3.")
-    if words:
-        if set(words) - model.vocabulary:
+    
+    if words is not None:
+        # Standardize input: convert list to dictionary if needed
+        if isinstance(words, list):
+            words = {word: "default" for word in words}
+        # Validate words are in vocabulary
+        if set(words.keys()) - model.vocabulary:
             raise ValueError("Some words are not in the vocabulary.")
-
+    
     # Get embeddings and project them
     if words:
-        # process all provided words
-        embeddings = np.array([model.get_word_embedding(word) for word in words])
+        # Process words from dictionary
+        word_list = list(words.keys())
+        class_list = list(words.values())
+        embeddings = np.array([model.get_word_embedding(word) for word in word_list])
         projected_embeddings = _project_embeddings(embeddings, dim, rnd_seed)
-        labels = words
+        labels = word_list
+        classes = class_list
     else:
-        # then retrieve all embeddings in the vocabulary
+        # Retrieve all embeddings in the vocabulary
         embeddings = model.get_layer("word_embedding").get_weights()[0]
         projected_embeddings = _project_embeddings(embeddings, dim, rnd_seed)
         labels = [model.idx2word[idx] for idx in range(model.vocabulary_size)]
+        # Assign all vocabulary to the same class for consistent coloring
+        classes = ["vocabulary"] * len(labels)
 
-    # Plot
+    # Create DataFrame with projection data
+    df = pd.DataFrame(projected_embeddings, columns=["x", "y"] if dim == 2 else ["x", "y", "z"])
+    df["label"] = labels
+    df["class"] = classes
+    
+    # Plot based on dimension
     if dim == 2:
-        df = pd.DataFrame(projected_embeddings, columns=["x", "y"])
-        df["label"] = labels
-        fig = px.scatter(df, x="x", y="y", hover_name="label", title="projected embeddings")
+        fig = px.scatter(
+            df, 
+            x="x", 
+            y="y", 
+            hover_name="label", 
+            color="class", 
+            title=title
+        )
         fig.update_traces(marker=dict(size=8, opacity=0.8))
         fig.show()
         
     elif dim == 3:
-        df = pd.DataFrame(projected_embeddings, columns=["x", "y", "z"])
-        df["label"] = labels
         fig = px.scatter_3d(
             df,
             x="x",
             y="y",
             z="z",
             hover_name="label",
-            title="projected embeddings",
+            color="class",
+            title=title,
         )
         fig.update_traces(marker=dict(size=5, opacity=0.8))
         fig.show()
