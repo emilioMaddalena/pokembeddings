@@ -1,4 +1,8 @@
-from typing import List, Optional, Dict, Union, Mapping
+import json
+import re
+import string
+from pathlib import Path
+from typing import Dict, List, Mapping, Optional, Union
 
 import numpy as np
 import pandas as pd
@@ -109,4 +113,33 @@ def visualize_embeddings(
         )
         fig.update_traces(marker=dict(size=5, opacity=0.8))
         fig.show()
-        
+
+
+# Clean and tokenize text
+def _pre_process_sentence(sentece: str) -> List[str]:
+    """Lowercase, remove punctuation, and split into words."""
+    sentece = sentece.lower()  
+    sentece = re.sub(f"[{string.punctuation}]", "", sentece)  
+    words = sentece.split()  
+    return words
+
+
+def import_dataset(
+    dataset_path: Path,
+    pre_process: bool = True,
+) -> List[List[str]]:
+    """Import a dataset from a JSON file."""
+    with open(dataset_path) as f:
+        json_data = json.load(f)
+    if pre_process:
+        return [_pre_process_sentence(sentence) for sentence in json_data["data"]]
+    else:
+        return json_data["data"]
+
+
+def merge_datasets(
+    *datasets: List[List[str]],
+) -> List[List[str]]:
+    """Concatenate all datasets together."""
+    return [sentence for dataset in datasets for sentence in dataset]
+    
