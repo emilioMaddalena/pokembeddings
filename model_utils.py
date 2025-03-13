@@ -16,26 +16,25 @@ DEFAULT_TYPE_COLORS = {
     "psychic": "purple"
 }
 
-def _project_embeddings(embeddings: np.ndarray, dim: int, rnd_seed: int) -> np.ndarray:
+def _project_embeddings(embeddings: np.ndarray, dim: int, **kwargs) -> np.ndarray: #rnd_seed: int = None) -> np.ndarray:
     """Project embeddings onto a lower-dimensional space."""
-    tsne = TSNE(n_components=dim, random_state=rnd_seed)
+    tsne = TSNE(n_components=dim, **kwargs)
     return tsne.fit_transform(embeddings)
 
 
 def visualize_embeddings(
     model: Word2Vec, 
     dim: int = 2, 
-    rnd_seed: int = 123, 
     words: Optional[Union[List[str], Dict[str, str]]] = None,
     title: str = "projected embeddings",
-    color_map: Optional[Dict[str, str]] = DEFAULT_TYPE_COLORS
+    color_map: Optional[Dict[str, str]] = DEFAULT_TYPE_COLORS,
+    **kwargs,
 ):
     """Visualize the embeddings in a 2D or 3D space.
     
     Args:
         model (Word2Vec): The Word2Vec model to visualize.
         dim (int, optional): Dimension of the projection. Defaults to 2.
-        rnd_seed (int, optional): Random seed for the projection. Defaults to 123.
         words (Optional[Union[List[str], Dict[str, str]]], optional): 
             - If List[str]: List of words to visualize (all assigned same class).
             - If Dict[str, str]: Dictionary where keys are words and values are classes/categories.
@@ -45,6 +44,7 @@ def visualize_embeddings(
         color_map (Optional[Dict[str, str]], optional): Dictionary mapping class names to specific colors.
             Default colors are used for Pokemon types: fire=red, water=blue, electric=yellow, 
             grass=green, psychic=purple.
+        **kwargs: Additional keyword arguments passed to the TSNE constructor (e.g. random_state: int)
         
     Returns:
         pd.DataFrame: DataFrame containing the projection data.
@@ -66,13 +66,13 @@ def visualize_embeddings(
         word_list = list(words.keys())
         class_list = list(words.values())
         embeddings = np.array([model.get_word_embedding(word) for word in word_list])
-        projected_embeddings = _project_embeddings(embeddings, dim, rnd_seed)
+        projected_embeddings = _project_embeddings(embeddings, dim, **kwargs)
         labels = word_list
         classes = class_list
     else:
         # Retrieve all embeddings in the vocabulary
         embeddings = model.get_layer("word_embedding").get_weights()[0]
-        projected_embeddings = _project_embeddings(embeddings, dim, rnd_seed)
+        projected_embeddings = _project_embeddings(embeddings, dim, **kwargs)
         labels = [model.idx2word[idx] for idx in range(model.vocabulary_size)]
         # Assign all vocabulary to the same class for consistent coloring
         classes = ["vocabulary"] * len(labels)
