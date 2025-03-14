@@ -5,8 +5,6 @@ In this test we verify that the pokemons are closer to their type than to any ot
 from itertools import product
 from typing import List
 
-import pytest
-
 from model import Word2Vec
 
 from .poke_types import POKEMONS_BY_TYPE
@@ -36,8 +34,8 @@ def all_test_cases() -> List:
         test_cases.extend(new_testcases)
     return test_cases
 
-@pytest.mark.parametrize("test_case", all_test_cases())
-def test_pokembedding(model: Word2Vec, test_case: WordGroup):
+
+def test_types(model: Word2Vec, test_case: WordGroup):
     """Asser that the close word is indeed closer."""
     close_similarity = model.compute_similarity(test_case.base_word, test_case.close_word)
     far_similarity = model.compute_similarity(test_case.base_word, test_case.far_word)
