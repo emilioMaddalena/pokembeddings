@@ -56,22 +56,23 @@ def assemble_test_triples() -> List:
     return triplets
 
 
-def test_types(model: Word2Vec):
-    """Asser that the close word is indeed closer."""
+def entire_triplet_in_vocab(model: Word2Vec, triplet: WordTriplet) -> bool:
+    """Check if all words in the triplet are in the vocabulary."""
+    return (
+        triplet.base_word in model.vocabulary
+        and triplet.similar_word in model.vocabulary
+        and triplet.dissimilar_word in model.vocabulary
+    )
+
+
+def test_script(model: Word2Vec):
+    """Assemble all test triplets, filter out those not in the vocabulary, and compute the similarity."""
     triplets = assemble_test_triples()
 
     for triplet in triplets:
-        # Check if the base word is in the vocabulary
-        if triplet.base_word not in model.vocabulary:
-            print(f"Word '{triplet.base_word}' not in vocabulary.")
+        if not entire_triplet_in_vocab(model, triplet):
             continue
-        elif triplet.similar_word not in model.vocabulary:
-            print(f"Word '{triplet.similar_word}' not in vocabulary.")
-            continue
-        elif triplet.dissimilar_word not in model.vocabulary:
-            print(f"Word '{triplet.dissimilar_word}' not in vocabulary.")
-            continue
-
+        
         TestResults.register_result(
             triplet.base_word,
             triplet.similar_word,
