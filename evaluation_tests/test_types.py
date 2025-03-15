@@ -29,6 +29,21 @@ class TestResults:
         else:
             TestResults.fail_counter += 1
 
+    @classmethod 
+    def tot_num_tests(cls) -> int:
+        """Return the total number of tests."""
+        return cls.pass_counter + cls.fail_counter
+
+    @classmethod
+    def pass_rate(cls) -> float:
+        """Return the pass rate."""
+        return float(cls.pass_counter) / cls.tot_num_tests()
+    
+    @classmethod
+    def fail_rate(cls) -> float:
+        """Return the fail rate."""
+        return float(cls.fail_counter) / cls.tot_num_tests()
+
 
 class WordTriplet:  # noqa: D101
     def __init__(self, base_word: str, similar_word: str, dissimilar_word: str):  # noqa: D107
@@ -82,6 +97,7 @@ def test_script(model: Word2Vec):
         )
 
     print(
-        f"Pass: {TestResults.pass_counter/len(triplets):.1%} ({TestResults.pass_counter}) \n", 
-        f"Fail: {TestResults.fail_counter/len(triplets):.1%} ({TestResults.fail_counter})"
+        f"Pass: {TestResults.pass_rate():.1%} ({TestResults.pass_counter} of {TestResults.tot_num_tests()})\n",
+        f"Fail: {TestResults.fail_rate():.1%} ({TestResults.fail_counter} of {TestResults.tot_num_tests()})",
     )
+    return TestResults
