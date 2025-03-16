@@ -5,6 +5,8 @@ Learning a word embedding for the 151 gen1 pokemons. The training corpus is comp
 
 The goal is to arrive at a well-separated, explainable embedding space of minimum dimension.
 
+![alt text](https://github.com/emilioMaddalena/pokembeddings/blob/main/data/projection.png)
+
 **Follow these steps:**
 - Train a `Word2Vec` model
 - Take a look at the resulting embedding using `Word2Vec.visualize_embeddings()` 
