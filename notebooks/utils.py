@@ -17,7 +17,9 @@ DEFAULT_TYPE_COLORS = {
     "water": "blue",
     "electric": "yellow",
     "grass": "green", 
-    "psychic": "purple"
+    "psychic": "purple",
+    "normal": "gray",
+    "fighting": "brown",
 }
 
 def _project_embeddings(embeddings: np.ndarray, dim: int, **kwargs) -> np.ndarray: #rnd_seed: int = None) -> np.ndarray:
