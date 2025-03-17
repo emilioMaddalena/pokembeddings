@@ -1,10 +1,12 @@
+import json
+
 import pandas as pd
 import tensorflow as tf
+from model import Word2Vec
 from tabulate import tabulate
 
-from evaluation_tests.poke_types import POKEMONS_BY_TYPE
-from model import Word2Vec
-
+with open("../data/eval_data_poke_and_types.json", "r") as f:
+    POKEMONS_BY_TYPE = json.load(f)
 
 def test_type_similarity(model_path="./saved_model"):
     """Test if pokemons are closer to their type than to any other type."""

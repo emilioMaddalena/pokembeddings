@@ -1,12 +1,13 @@
 """In this test we verify that the pokemons are closer to their type than to any other type."""
 
+import json
 from itertools import product
 from typing import List
 
 from model import Word2Vec
 
-from .poke_types import POKEMONS_BY_TYPE
-
+with open("../data/eval_data_poke_and_types.json", "r") as f:
+    POKEMONS_BY_TYPE = json.load(f)
 
 class TestResults:
     """This class stores and post-processes the test results."""  # noqa: D404
