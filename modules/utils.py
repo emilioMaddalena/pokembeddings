@@ -7,8 +7,9 @@ from typing import Dict, List, Optional, Union
 import numpy as np
 import pandas as pd
 import plotly.express as px
-from model import Word2Vec
 from sklearn.manifold import TSNE
+
+from .model import Word2Vec
 
 # Define default Pokemon type colors
 DEFAULT_TYPE_COLORS = {
