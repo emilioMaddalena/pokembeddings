@@ -14,6 +14,19 @@ Learning a word embedding for the 151 gen1 pokemons.
 
 The model is a [classical word2vec network](https://www.tensorflow.org/text/tutorials/word2vec) implemented in tensorflow Keras.
 
-The architecture is rather simple: a one-hot encoder of the input words, followed by an embedding matrix $W_{v,d}$ for the center word and another one $W'_{v,d}$ for the context words, and finally an output layer. 
+The architecture is rather simple. It accepts `center words` and `context words`, both of which are one-hot encoded. 
 
-Here, $v$ is the size of the vocabulary and $d$ is the dimension of the embedding space. The former is fixed by the training corpus, and the latter is a hyperparameter.
+Each of the two is transformed by a separate matrix of the same size: $W_{v,d}$ and $W'_{v,d}$, where $v$ is the vocabulary size and $d$ the embedding space dimension. 
+
+Finally, the transformed vectors pass through an output transformation to yield probabilities. The dot product paired with a softmax would be a valid choice. Notice that there are no trainable parameters here.
+
+Once the network is trained, the context matrix $W'_{v,d}$ is ignored and only $W_{v,d}$ is used to get new embeddings.
+
+TODO: Discuss loss functions.
+
+**Advanced details**
+
+- Replacing the softmax
+- Negative sampling
+- CBOW vs skip-gram
+
