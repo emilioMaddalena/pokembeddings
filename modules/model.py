@@ -135,6 +135,8 @@ class Word2Vec(Model):  # noqa: D101
         context_embedding = self.context_embedding(context_indices)
         # Calculate similarity
         similarity_score = self.similarity_metric([center_embedding, context_embedding])
+        # Turn -1, 1 into 0, 1
+        similarity_score = (1 + similarity_score) / 2
         return similarity_score
 
     def get_word_embedding(self, word: str) -> np.ndarray:
