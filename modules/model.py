@@ -21,15 +21,22 @@ class Word2Vec(Model):  # noqa: D101
     - Call self.get_word_embedding() and self.compute_similarity() to have fun.
     """
 
-    def __init__(self, dataset: List[List[str]], embedding_dim: int):
+    def __init__(
+            self, 
+            dataset: List[List[str]], 
+            embedding_dim: int, 
+            weight_tying: bool = False
+        ):
         """Initialize the base attributes.
 
         Save the dataset, extract vocabulary and index the tokens.
         Define the base layers for the model.
+        Define the similarity metric, hardcoded cosine.
 
         Args:
             dataset: A set of tokenized sentences on which the model will be trained.
             embedding_dim: The dimension of the embedding space.
+            weight_tying: If the context and center embeddings should share weights.
         """
         super(Word2Vec, self).__init__()
 
@@ -44,8 +51,13 @@ class Word2Vec(Model):  # noqa: D101
 
         # Setup the main components
         self.embedding_dim = embedding_dim
-        self.embedding = Embedding(self.vocabulary_size, self.embedding_dim, name="word_embedding")
-        self.similarity_metric = Dot(axes=1, normalize=True)  # cosine similarity
+        self.center_embedding = Embedding(self.vocabulary_size, self.embedding_dim, name="word_embedding")
+        if weight_tying:
+            self.context_embedding = self.center_embedding
+        else:
+            self.context_embedding = Embedding(self.vocabulary_size, self.embedding_dim)
+        # Cosine similarity
+        self.similarity_metric = Dot(axes=1, normalize=True)
 
     @property
     def vocabulary_size(self) -> int:
@@ -119,8 +131,8 @@ class Word2Vec(Model):  # noqa: D101
         center_indices = inputs["center"]
         context_indices = inputs["context"]
         # Get embeddings
-        center_embedding = self.embedding(center_indices)
-        context_embedding = self.embedding(context_indices)
+        center_embedding = self.center_embedding(center_indices)
+        context_embedding = self.context_embedding(context_indices)
         # Calculate similarity
         similarity_score = self.similarity_metric([center_embedding, context_embedding])
         return similarity_score
