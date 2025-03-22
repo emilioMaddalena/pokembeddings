@@ -4,7 +4,7 @@ import json
 from itertools import product
 from typing import List
 
-from model import Word2Vec
+from .model import Word2Vec
 
 with open("../data/eval_data_poke_and_types.json", "r") as f:
     POKEMONS_BY_TYPE = json.load(f)
