@@ -127,7 +127,15 @@ class Word2Vec(Model):  # noqa: D101
 
         return train_dataset
 
-    def call(self, inputs):  # noqa: D102
+    def call(self, inputs):  
+        """Forward pass of the model.
+
+        Args:
+            inputs: A dictionary containing the center and context word indices.
+            
+        Returns:
+            probability: The probability of the context word given the center word.
+        """
         center_indices = inputs["center"]
         context_indices = inputs["context"]
         # Get embeddings
@@ -136,8 +144,8 @@ class Word2Vec(Model):  # noqa: D101
         # Calculate similarity
         similarity_score = self.similarity_metric([center_embedding, context_embedding])
         # Turn -1, 1 into 0, 1
-        similarity_score = (1 + similarity_score) / 2
-        return similarity_score
+        probability = (1 + similarity_score) / 2
+        return probability
 
     def get_word_embedding(self, word: str) -> np.ndarray:
         """Get the embedding of a single word."""
@@ -150,7 +158,14 @@ class Word2Vec(Model):  # noqa: D101
         return embedding_matrix[word_index]
 
     def compute_similarity(self, word_a: str, word_b: str):
-        """Compute similarity between two single words."""
+        """Compute similarity between two single words.
+        
+        This method uses the center embedding matrix only. It's supposed to be used
+        for testing purposes only.
+
+        This is not equivalent to using calling the model as that would yield probabilities
+        instead of similarity scores.
+        """
         embedding_a = tf.reshape(self.get_word_embedding(word_a), (1, self.embedding_dim))
         embedding_b = tf.reshape(self.get_word_embedding(word_b), (1, self.embedding_dim))
         return self.similarity_metric([embedding_a, embedding_b]).numpy()[0, 0]
