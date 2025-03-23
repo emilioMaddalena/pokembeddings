@@ -1,11 +1,8 @@
 from collections import defaultdict
-from typing import List, Optional
+from typing import List
 
 import numpy as np
-import pandas as pd
-import plotly.express as px
 import tensorflow as tf
-from sklearn.manifold import TSNE
 from tensorflow.keras.layers import Dot, Embedding
 from tensorflow.keras.models import Model
 
@@ -132,7 +129,7 @@ class Word2Vec(Model):  # noqa: D101
 
         Args:
             inputs: A dictionary containing the center and context word indices.
-            
+
         Returns:
             probability: The probability of the context word given the center word.
         """
@@ -163,7 +160,7 @@ class Word2Vec(Model):  # noqa: D101
         This method uses the center embedding matrix only. It's supposed to be used
         for testing purposes only.
 
-        This is not equivalent to using calling the model as that would yield probabilities
+        This is NOT equivalent to using calling the model as that would yield probabilities
         instead of similarity scores.
         """
         embedding_a = tf.reshape(self.get_word_embedding(word_a), (1, self.embedding_dim))
