@@ -12,7 +12,7 @@ Learning a word embedding for the 151 gen1 pokemons.
 
 **Explanation**
 
-The model is a [classical word2vec network](https://www.tensorflow.org/text/tutorials/word2vec) implemented in tensorflow Keras.
+The model is a [classical word2vec network](https://www.tensorflow.org/text/tutorials/word2vec) implemented both in tensorflow Keras and in Pytorch.
 
 The architecture is rather simple. It accepts `center words` and `context words`, both of which are one-hot encoded. 
 
@@ -22,11 +22,14 @@ Finally, the transformed vectors pass through an output transformation to yield 
 
 Once the network is trained, the context matrix $W'_{v,d}$ is ignored and only $W_{v,d}$ is used to get new embeddings.
 
-TODO: Discuss loss functions.
-
 **Advanced details**
 
+- Different loss functions
 - Replacing the softmax
 - Negative sampling
 - CBOW vs skip-gram
 
+**TODOs:**
+- Increase the number of pokemons (training data), gen 2 maybe
+- Conduct clustering experiments (sub-types)
+- Fix the training pokedex data to include the name of the pokemon at the beginning
